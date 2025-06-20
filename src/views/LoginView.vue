@@ -29,19 +29,19 @@ async function handleSubmit() {
   <div class="login-container">
     <el-card class="login-card">
       <h2>{{ isLogin ? '登录' : '注册' }}</h2>
-      <el-form @submit.prevent="handleSubmit">
+      <el-form @submit.prevent="handleSubmit" label-width="80px" label-position="left">
         <el-form-item label="用户名">
           <el-input v-model="username" placeholder="请输入用户名" />
         </el-form-item>
         <el-form-item label="密码">
           <el-input v-model="password" type="password" placeholder="请输入密码" />
         </el-form-item>
-        <el-button type="primary" native-type="submit">
-          {{ isLogin ? '登录' : '注册' }}
-        </el-button>
-        <el-button type="text" @click="isLogin = !isLogin">
-          {{ isLogin ? '没有账号？去注册' : '已有账号？去登录' }}
-        </el-button>
+        <el-form-item>
+          <el-button type="primary" class="submit-btn" native-type="submit">{{ isLogin ? '登录' : '注册' }}</el-button>
+        </el-form-item>
+        <div class="form-footer">
+          <router-link to="/register" class="login-link">没有账号？去注册</router-link>
+        </div>
       </el-form>
       <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon />
     </el-card>
@@ -54,24 +54,57 @@ async function handleSubmit() {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, #f8f4e6 0%, #e6d8c8 100%);
 }
 
 .login-card {
-  width: 400px;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 420px;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 h2 {
   text-align: center;
+  margin-bottom: 30px;
+  color: #6b8e9c;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.el-form-item {
   margin-bottom: 24px;
-  color: #409eff;
+}
+
+.el-form-item__label {
+  display: block;
+  text-align: left;
+  margin-bottom: 8px;
+  color: #6b8e9c;
+  font-weight: 500;
+}
+
+.el-input {
+  width: 100%;
+}
+
+::v-deep .el-input__wrapper {
+  width: 100% !important;
+  max-width: 100%;
 }
 
 .el-button {
   width: 100%;
   margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.el-button--text {
+  color: #6b8e9c;
+}
+
+.el-button--text:hover {
+  color: #5a7c8a;
 }
 </style>
