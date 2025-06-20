@@ -50,38 +50,38 @@ async function handleSubmit() {
 
 <style scoped>
 .login-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8f4e6 0%, #e6d8c8 100%);
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8f4e6 0%, #e6d8c8 100%);
+  padding: 20px;
 }
 
 .login-card {
-  width: 420px;
+  width: 400px;
   padding: 30px;
   border-radius: 12px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 h2 {
   text-align: center;
-  margin-bottom: 30px;
-  color: #6b8e9c;
-  font-weight: 500;
-  letter-spacing: 1px;
+  margin-bottom: 24px;
+  color: #6b5c4d;
+  font-weight: 600;
 }
 
 .el-form-item {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .el-form-item__label {
   display: block;
   text-align: left;
   margin-bottom: 8px;
-  color: #6b8e9c;
+  color: #6b5c4d;
   font-weight: 500;
 }
 
@@ -89,22 +89,33 @@ h2 {
   width: 100%;
 }
 
-::v-deep .el-input__wrapper {
+:deep(.el-input__wrapper) {
   width: 100% !important;
   max-width: 100%;
 }
 
-.el-button {
+.submit-btn {
   width: 100%;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  background-color: #c9a87a;
+  border-color: #c9a87a;
 }
 
-.el-button--text {
-  color: #6b8e9c;
+.submit-btn:hover {
+  background-color: #b89566;
+  border-color: #b89566;
+}
+.form-footer {
+  text-align: center;
+  margin-top: 16px;
 }
 
-.el-button--text:hover {
-  color: #5a7c8a;
+.login-link {
+  color: #c9a87a;
+  text-decoration: none;
+}
+
+.login-link:hover {
+  color: #b89566;
+  text-decoration: underline;
 }
 </style>

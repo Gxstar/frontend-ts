@@ -83,7 +83,7 @@ h2 {
   color: #6b5c4d;
 }
 
-::v-deep .el-input__wrapper {
+:deep(.el-input__wrapper) {
   width: 100% !important;
   max-width: 100%;
 }
