@@ -7,6 +7,9 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null);
   const token = ref(localStorage.getItem('token') || null);
   const isAuthenticated = computed(() => !!token.value);
+  const isLoading = ref(false);
+  // 应用初始化时自动验证token并加载用户信息
+  checkAuth();
 
   async function register(username: string, password: string) {
     try {
@@ -61,12 +64,22 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function checkAuth() {
-    if (!token.value) return false;
+    // 优先从localStorage获取最新token并同步到响应式变量
+    const currentToken = localStorage.getItem('token');
+    if (!currentToken) {
+      token.value = null;
+      return false;
+    }
     
+    // 同步最新token到响应式变量和OpenAPI配置
+    token.value = currentToken;
+    OpenAPI.TOKEN = currentToken;
+    
+    isLoading.value = true;
     try {
       OpenAPI.TOKEN = token.value;
       
-      const response = await fetch(`${OpenAPI.BASE}/me`, {
+      const response = await fetch(`${OpenAPI.BASE}/users/me`, {
         headers: {
           Authorization: `Bearer ${token.value}`,
         },
@@ -74,11 +87,14 @@ export const useAuthStore = defineStore('auth', () => {
 
       if (!response.ok) throw new Error('Authentication failed');
 
+      // 获取用户信息，包含角色数据
       user.value = await response.json();
       return true;
     } catch (error) {
       logout();
       return false;
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -89,6 +105,8 @@ export const useAuthStore = defineStore('auth', () => {
     OpenAPI.TOKEN = undefined;
   }
 
+  const getUserRole = computed(() => user.value?.role || null);
+
   return {
     user,
     token,
@@ -96,6 +114,8 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     checkAuth,
-    logout
+    logout,
+    getUserRole,
+    isLoading
   };
 });

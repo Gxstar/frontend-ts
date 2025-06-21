@@ -24,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import '@/assets/auth-styles.css';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
@@ -51,66 +52,5 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.login-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8f4e6, #e6d8c8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.login-card {
-  width: 400px;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-h2 {
-  text-align: center;
-  margin-bottom: 24px;
-  color: #6b5c4d;
-  font-weight: 600;
-}
-
-.el-form-item {
-  margin-bottom: 20px;
-}
-
-.el-form-item__label {
-  color: #6b5c4d;
-}
-
-:deep(.el-input__wrapper) {
-  width: 100% !important;
-  max-width: 100%;
-}
-
-.submit-btn {
-  width: 100%;
-  background-color: #c9a87a;
-  border-color: #c9a87a;
-}
-
-.submit-btn:hover {
-  background-color: #b89566;
-  border-color: #b89566;
-}
-
-.form-footer {
-  text-align: center;
-  margin-top: 16px;
-}
-
-.login-link {
-  color: #c9a87a;
-  text-decoration: none;
-}
-
-.login-link:hover {
-  color: #b89566;
-  text-decoration: underline;
-}
+@import '@/assets/auth-styles.css';
 </style>
