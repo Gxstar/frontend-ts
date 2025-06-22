@@ -8,13 +8,11 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || null);
   const isAuthenticated = computed(() => !!token.value);
   const isLoading = ref(false);
-  // 应用初始化时自动验证token并加载用户信息
-  checkAuth();
 
   async function register(username: string, password: string) {
     try {
       OpenAPI.TOKEN = undefined;
-      
+
       const response = await fetch(`${OpenAPI.BASE}/users/register`, {
         method: 'POST',
         headers: {
@@ -35,7 +33,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(username: string, password: string) {
     try {
       OpenAPI.TOKEN = undefined;
-      
+
       const response = await fetch(`${OpenAPI.BASE}/users/login`, {
         method: 'POST',
         headers: {
@@ -52,10 +50,10 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem('token', token.value);
       }
       OpenAPI.TOKEN = token.value || undefined;
-      
+
       // 获取用户信息
       await checkAuth();
-      
+
       return true;
     } catch (error) {
       logout();
@@ -70,28 +68,36 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = null;
       return false;
     }
-    
+
     // 同步最新token到响应式变量和OpenAPI配置
     token.value = currentToken;
     OpenAPI.TOKEN = currentToken;
-    
+
     isLoading.value = true;
     try {
       OpenAPI.TOKEN = token.value;
-      
+
       const response = await fetch(`${OpenAPI.BASE}/users/me`, {
         headers: {
           Authorization: `Bearer ${token.value}`,
         },
       });
 
-      if (!response.ok) throw new Error('Authentication failed');
+      // 区分认证失败(401)和授权失败(403)
+      if (response.status === 401) {
+        throw new Error('Authentication failed');
+      } else if (!response.ok) {
+        throw new Error('Authorization failed');
+      }
 
       // 获取用户信息，包含角色数据
       user.value = await response.json();
       return true;
     } catch (error) {
+      // 只有认证失败才清除用户状态
+
       logout();
+
       return false;
     } finally {
       isLoading.value = false;
@@ -105,7 +111,8 @@ export const useAuthStore = defineStore('auth', () => {
     OpenAPI.TOKEN = undefined;
   }
 
-  const getUserRole = computed(() => user.value?.role || null);
+  // 确保角色始终返回字符串类型，默认为'guest'
+  const getUserRole = computed(() => user.value?.role || 'guest');
 
   return {
     user,
