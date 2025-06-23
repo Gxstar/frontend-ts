@@ -3,8 +3,8 @@
     <div class="header-actions">
       <h1>品牌管理</h1>
       <el-button type="primary" @click="showAddDialog = true">
-        <el-icon-plus /> 添加品牌
-      </el-button>
+          <el-icon><plus /></el-icon> 添加品牌
+        </el-button>
     </div>
 
     <el-card>
@@ -50,7 +50,7 @@
           <el-input v-model="currentBrand.name" />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="currentBrand.description" type="textarea" rows="4" />
+          <el-input v-model="currentBrand.description" type="textarea" :rows="4" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+import { Plus } from '@element-plus/icons-vue';
 import { ref, onMounted, reactive } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Service } from '@/api/services/Service';

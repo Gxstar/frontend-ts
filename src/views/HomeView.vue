@@ -17,6 +17,14 @@
 
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth'
+import { onMounted } from 'vue'
 
 const authStore=useAuthStore()
+
+// 页面加载时检查认证状态
+onMounted(async () => {
+  if (!authStore.isLoading && !authStore.user) {
+    await authStore.checkAuth();
+  }
+})
 </script>
