@@ -1,9 +1,9 @@
 <template>
-  <div class="brand-management">
+  <div class="camera-management">
     <div class="header-actions">
-      <h1>品牌管理</h1>
+      <h1>相机管理</h1>
       <el-button type="primary" @click="showAddDialog = true">
-          <el-icon><plus /></el-icon> 添加品牌
+          <el-icon><plus /></el-icon> 添加相机
         </el-button>
     </div>
 
@@ -11,17 +11,18 @@
       <div class="search-bar">
         <el-input
           v-model="searchKeyword"
-          placeholder="输入品牌名称搜索"
+          placeholder="输入相机型号搜索"
           style="width: 300px"
           prefix-icon="Search"
         />
-        <el-button @click="fetchBrands">搜索</el-button>
+        <el-button @click="fetchCameras">搜索</el-button>
       </div>
 
-      <el-table :data="brands" stripe style="width: 100%">
+      <el-table :data="cameras" stripe style="width: 100%">
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="name" label="品牌名称" />
-        <el-table-column prop="description" label="描述" />
+        <el-table-column prop="model" label="相机型号" />
+        <el-table-column prop="brand_id" label="品牌ID" />
+        <el-table-column prop="mount_id" label="卡口ID" />
         <el-table-column prop="created_at" label="创建时间" />
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
@@ -45,12 +46,18 @@
 
     <!-- 添加/编辑对话框 -->
     <el-dialog v-model="showAddDialog" :title="dialogTitle">
-      <el-form ref="brandForm" :model="currentBrand" label-width="100px">
-        <el-form-item label="品牌名称" prop="name" :rules="[{ required: true, message: '请输入品牌名称', trigger: 'blur' }]">
-          <el-input v-model="currentBrand.name" />
+      <el-form ref="cameraForm" :model="currentCamera" label-width="100px">
+        <el-form-item label="相机型号" prop="model" :rules="[{ required: true, message: '请输入相机型号', trigger: 'blur' }]">
+          <el-input v-model="currentCamera.model" />
+        </el-form-item>
+        <el-form-item label="品牌ID" prop="brand_id" :rules="[{ required: true, message: '请输入品牌ID', trigger: 'blur' }]">
+          <el-input v-model.number="currentCamera.brand_id" type="number" />
+        </el-form-item>
+        <el-form-item label="卡口ID" prop="mount_id" :rules="[{ required: true, message: '请输入卡口ID', trigger: 'blur' }]">
+          <el-input v-model.number="currentCamera.mount_id" type="number" />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="currentBrand.description" type="textarea" :rows="4" />
+          <el-input v-model="currentCamera.description" type="textarea" :rows="4" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -63,39 +70,38 @@
 
 <script setup lang="ts">
 import { Plus } from '@element-plus/icons-vue';
-import { ref, onMounted, reactive, watch } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Service } from '@/api/services/Service';
-import type { Brand } from '@/api/models/Brand';
+import type { Camera } from '@/api/models/Camera';
 
 // 状态管理
-const brands = ref<Brand[]>([]);
+const cameras = ref<Camera[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const searchKeyword = ref('');
 const showAddDialog = ref(false);
-const dialogTitle = ref('添加品牌');
-const currentBrand = ref<Partial<Brand>>({});
-const brandForm = ref<any>(null);
+const dialogTitle = ref('添加相机');
+const currentCamera = ref<Partial<Camera>>({});
+const cameraForm = ref<any>(null);
 const loading = ref(false);
 
 // 生命周期钩子
 onMounted(() => {
-  fetchBrands();
+  fetchCameras();
 });
 
 // 数据获取
-const fetchBrands = async () => {
+const fetchCameras = async () => {
   try {
     loading.value = true;
     const skip = (currentPage.value - 1) * pageSize.value;
-    const data = await Service.readBrandsBrandsGet(skip, pageSize.value, searchKeyword.value);
-    brands.value = data;
-    // 这里假设total需要单独获取或从响应头中获取，暂时用固定值
-    total.value = brands.value.length; // 使用实际返回数据长度作为总数
+    const data = await Service.readCamerasCamerasGet(skip, pageSize.value, searchKeyword.value);
+    cameras.value = data;
+    total.value = cameras.value.length;
   } catch (error) {
-    ElMessage.error('获取品牌列表失败');
+    ElMessage.error('获取相机列表失败');
     console.error(error);
   } finally {
     loading.value = false;
@@ -104,46 +110,46 @@ const fetchBrands = async () => {
 
 // 添加防抖搜索
 let timeoutId: NodeJS.Timeout | undefined;
-const debouncedFetchBrands = () => {
+const debouncedFetchCameras = () => {
   clearTimeout(timeoutId);
   timeoutId = setTimeout(() => {
-    fetchBrands();
+    fetchCameras();
   }, 300);
 };
 
-watch(searchKeyword, debouncedFetchBrands);
+watch(searchKeyword, debouncedFetchCameras);
 
 // 分页处理
 const handlePageChange = (page: number) => {
   currentPage.value = page;
-  fetchBrands();
+  fetchCameras();
 };
 
 const handleSizeChange = (size: number) => {
   pageSize.value = size;
   currentPage.value = 1;
-  fetchBrands();
+  fetchCameras();
 };
 
 // 编辑操作
-const handleEdit = (row: Brand) => {
-  currentBrand.value = { ...row };
-  dialogTitle.value = '编辑品牌';
+const handleEdit = (row: Camera) => {
+  currentCamera.value = { ...row };
+  dialogTitle.value = '编辑相机';
   showAddDialog.value = true;
 };
 
 // 删除操作
 const handleDelete = async (id: number) => {
   try {
-    await ElMessageBox.confirm('确定要删除该品牌吗？', '警告', {
+    await ElMessageBox.confirm('确定要删除该相机吗？', '警告', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
     });
 
-    await Service.deleteBrandBrandsBrandIdDelete(id);
+    await Service.deleteCameraCamerasCameraIdDelete(id);
     ElMessage.success('删除成功');
-    fetchBrands();
+    fetchCameras();
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('删除失败');
@@ -155,21 +161,21 @@ const handleDelete = async (id: number) => {
 // 表单提交
 const submitForm = async () => {
   try {
-    await brandForm.value.validate();
+    await cameraForm.value.validate();
     loading.value = true;
 
-    if (currentBrand.value.id) {
-      // 更新品牌
-      await Service.updateBrandBrandsBrandIdPut(currentBrand.value.id, currentBrand.value as Brand);
-      ElMessage.success('品牌更新成功');
+    if (currentCamera.value.id) {
+      // 更新相机
+      await Service.updateCameraCamerasCameraIdPut(currentCamera.value.id, currentCamera.value as Camera);
+      ElMessage.success('相机更新成功');
     } else {
-      // 创建品牌
-      await Service.createBrandBrandsPost(currentBrand.value as Brand);
-      ElMessage.success('品牌创建成功');
+      // 创建相机
+      await Service.createCameraCamerasPost(currentCamera.value as Camera);
+      ElMessage.success('相机创建成功');
     }
 
     showAddDialog.value = false;
-    fetchBrands();
+    fetchCameras();
     resetForm();
   } catch (error) {
     if (typeof error === 'string') {
@@ -185,8 +191,8 @@ const submitForm = async () => {
 
 // 重置表单
 const resetForm = () => {
-  currentBrand.value = {};
-  brandForm.value?.resetFields();
+  currentCamera.value = {};
+  cameraForm.value?.resetFields();
 };
 </script>
 

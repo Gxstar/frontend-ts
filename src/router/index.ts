@@ -23,6 +23,11 @@ const router = createRouter({
         path: 'brands',
         name: 'admin-brands',
         component: BrandListView
+      },
+      {
+        path: 'cameras',
+        name: 'admin-cameras',
+        component: () => import('../views/admin/cameras/CameraListView.vue')
       }
     ]
   },
