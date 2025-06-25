@@ -45,7 +45,7 @@
             <el-menu-item index="/admin/cameras">相机管理</el-menu-item>
             <el-menu-item index="/admin/lenses">镜头管理</el-menu-item>
             <el-menu-item index="/admin/mounts">卡口管理</el-menu-item>
-            <el-menu-item index="/admin/users">用户管理</el-menu-item>
+        <el-menu-item index="/admin/users">用户管理</el-menu-item>
           </el-sub-menu>
         </el-menu>
       </el-aside>

@@ -28,6 +28,21 @@ const router = createRouter({
         path: 'cameras',
         name: 'admin-cameras',
         component: () => import('../views/admin/cameras/CameraListView.vue')
+      },
+      {
+        path: 'lenses',
+        name: 'admin-lenses',
+        component: () => import('../views/admin/lenses/LensListView.vue')
+      },
+      {
+        path: 'mounts',
+        name: 'admin-mounts',
+        component: () => import('../views/admin/mounts/MountListView.vue')
+      },
+      {
+        path: 'users',
+        name: 'admin-users',
+        component: () => import('../views/admin/users/UserListView.vue')
       }
     ]
   },
