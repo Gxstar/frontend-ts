@@ -50,11 +50,48 @@
         <el-form-item label="相机型号" prop="model" :rules="[{ required: true, message: '请输入相机型号', trigger: 'blur' }]">
           <el-input v-model="currentCamera.model" />
         </el-form-item>
-        <el-form-item label="品牌ID" prop="brand_id" :rules="[{ required: true, message: '请输入品牌ID', trigger: 'blur' }]">
-          <el-input v-model.number="currentCamera.brand_id" type="number" />
+        <el-form-item label="品牌" prop="brand_id" :rules="[{ required: true, message: '请选择品牌', trigger: 'change' }]">
+          <el-select v-model="currentCamera.brand_id" placeholder="请选择品牌">
+            <el-option v-for="brand in brands" :key="brand.id" :label="brand.name" :value="brand.id" />
+          </el-select>
         </el-form-item>
-        <el-form-item label="卡口ID" prop="mount_id" :rules="[{ required: true, message: '请输入卡口ID', trigger: 'blur' }]">
-          <el-input v-model.number="currentCamera.mount_id" type="number" />
+        <el-form-item label="卡口" prop="mount_id" :rules="[{ required: true, message: '请选择卡口', trigger: 'change' }]">
+          <el-select v-model="currentCamera.mount_id" placeholder="请选择卡口">
+            <el-option v-for="mount in mounts" :key="mount.id" :label="mount.name" :value="mount.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="中文型号" prop="model_zh">
+          <el-input v-model="currentCamera.model_zh" placeholder="请输入中文型号" />
+        </el-form-item>
+        <el-form-item label="发布年份" prop="release_year">
+          <el-date-picker
+            v-model="releaseYearStr"
+            type="year"
+            :disabled-date="disabledFutureYear"
+            value-format="YYYY"
+            placeholder="选择发布年份"
+          />
+        </el-form-item>
+        <el-form-item label="相机类型" prop="type">
+          <el-input v-model="currentCamera.type" placeholder="请输入相机类型" />
+        </el-form-item>
+        <el-form-item label="传感器尺寸" prop="sensor_size">
+          <el-input v-model="currentCamera.sensor_size" placeholder="请输入传感器尺寸" />
+        </el-form-item>
+        <el-form-item label="有效像素" prop="megapixels">
+          <el-input v-model.number="currentCamera.megapixels" type="number" placeholder="请输入有效像素" />
+        </el-form-item>
+        <el-form-item label="ISO范围" prop="iso_range">
+          <el-input v-model="currentCamera.iso_range" placeholder="请输入ISO范围" />
+        </el-form-item>
+        <el-form-item label="快门速度" prop="shutter_speed">
+          <el-input v-model="currentCamera.shutter_speed" placeholder="请输入快门速度" />
+        </el-form-item>
+        <el-form-item label="重量(克)" prop="weight_grams">
+          <el-input v-model.number="currentCamera.weight_grams" type="number" placeholder="请输入重量" />
+        </el-form-item>
+        <el-form-item label="尺寸" prop="dimensions">
+          <el-input v-model="currentCamera.dimensions" placeholder="请输入尺寸" />
         </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="currentCamera.description" type="textarea" :rows="4" />
@@ -70,13 +107,30 @@
 
 <script setup lang="ts">
 import { Plus } from '@element-plus/icons-vue';
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Service } from '@/api/services/Service';
 import type { Camera } from '@/api/models/Camera';
+import type { Brand } from '@/api/models/Brand';
+import type { Mount } from '@/api/models/Mount';
+
+// 计算属性：处理发布年份字符串与数字的转换
+const releaseYearStr = computed({
+  get: () => currentCamera.value.release_year?.toString() || '',
+  set: (value) => {
+    currentCamera.value.release_year = value ? parseInt(value, 10) : null;
+  }
+});
+
+// 禁用未来年份
+const disabledFutureYear = (time: Date) => {
+  return time.getFullYear() > new Date().getFullYear();
+}
 
 // 状态管理
 const cameras = ref<Camera[]>([]);
+const brands = ref<Brand[]>([]);
+const mounts = ref<Mount[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -90,9 +144,31 @@ const loading = ref(false);
 // 生命周期钩子
 onMounted(() => {
   fetchCameras();
+  fetchBrands();
+  fetchMounts();
 });
 
 // 数据获取
+const fetchBrands = async () => {
+  try {
+    const data = await Service.readBrandsBrandsGet(0, 100);
+    brands.value = data;
+  } catch (error) {
+    ElMessage.error('获取品牌列表失败');
+    console.error(error);
+  }
+};
+
+const fetchMounts = async () => {
+  try {
+    const data = await Service.readMountsMountsGet(0, 100);
+    mounts.value = data;
+  } catch (error) {
+    ElMessage.error('获取卡口列表失败');
+    console.error(error);
+  }
+};
+
 const fetchCameras = async () => {
   try {
     loading.value = true;

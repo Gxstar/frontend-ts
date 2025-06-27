@@ -22,11 +22,18 @@
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="model" label="镜头型号" />
         <el-table-column prop="model_zh" label="中文型号" />
-        <el-table-column prop="brand_id" label="品牌ID" width="100" />
+        <el-table-column label="品牌" width="120">
+          <template #default="{ row }">{{ brands.find(b => b.id === row.brand_id)?.name || '-' }}</template>
+        </el-table-column>
         <el-table-column prop="focal_length" label="焦距" />
         <el-table-column prop="aperture" label="光圈" />
         <el-table-column prop="lens_type" label="镜头类型" />
         <el-table-column prop="release_year" label="发布年份" width="120" />
+        <el-table-column label="卡口" width="180">
+          <template #default="{ row }">
+            {{ row.mount_ids && (row.mount_ids as number[]).map((id: number) => mounts.find(m => m.id === id)?.name).filter(Boolean).join(', ') || '-' }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="200" align="center">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
@@ -56,8 +63,10 @@
         <el-form-item label="中文型号" prop="model_zh">
           <el-input v-model="currentLens.model_zh" />
         </el-form-item>
-        <el-form-item label="品牌ID" prop="brand_id" :rules="[{ required: true, message: '请输入品牌ID', trigger: 'blur' }]">
-          <el-input v-model.number="currentLens.brand_id" type="number" />
+        <el-form-item label="品牌" prop="brand_id" :rules="[{ required: true, message: '请选择品牌', trigger: 'change' }]">
+          <el-select v-model="currentLens.brand_id" placeholder="请选择品牌">
+            <el-option v-for="brand in brands" :key="brand.id" :label="brand.name" :value="brand.id" />
+          </el-select>
         </el-form-item>
         <el-form-item label="焦距" prop="focal_length" :rules="[{ required: true, message: '请输入焦距', trigger: 'blur' }]">
           <el-input v-model="currentLens.focal_length" />
@@ -69,7 +78,18 @@
           <el-input v-model="currentLens.lens_type" />
         </el-form-item>
         <el-form-item label="发布年份" prop="release_year">
-          <el-input v-model.number="currentLens.release_year" type="number" />
+          <el-date-picker
+            v-model="releaseYearStr"
+            type="year"
+            :disabled-date="disabledFutureYear"
+            value-format="YYYY"
+            placeholder="选择发布年份"
+          />
+        </el-form-item>
+        <el-form-item label="卡口" prop="mount_ids" :rules="[{ required: true, message: '请选择至少一个卡口', trigger: 'change' }]">
+          <el-select v-model="currentLens.mount_ids" multiple placeholder="请选择卡口">
+            <el-option v-for="mount in mounts" :key="mount.id" :label="mount.name" :value="mount.id" />
+          </el-select>
         </el-form-item>
         <el-form-item label="滤镜尺寸" prop="filter_size">
           <el-input v-model.number="currentLens.filter_size" type="number" />
@@ -96,37 +116,93 @@
 
 <script setup lang="ts">
 import { Plus } from '@element-plus/icons-vue';
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Service } from '@/api/services/Service';
 import type { Lens } from '@/api/models/Lens';
+import type { Brand } from '@/api/models/Brand';
+interface LensWithMounts extends Lens {
+  mount_ids: number[];
+}
+import type { Mount } from '@/api/models/Mount';
+
+// 计算属性：处理发布年份字符串与数字的转换
+const releaseYearStr = computed({
+  get: () => currentLens.value.release_year?.toString() || '',
+  set: (value) => {
+    currentLens.value.release_year = value ? parseInt(value, 10) : null;
+  }
+});
+
+// 禁用未来年份
+const disabledFutureYear = (time: Date) => {
+  return time.getFullYear() > new Date().getFullYear();
+};
 
 // 状态管理
-const lenses = ref<Lens[]>([]);
+const lenses = ref<LensWithMounts[]>([]);
+const brands = ref<Brand[]>([]);
+const mounts = ref<Mount[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const searchKeyword = ref('');
 const showAddDialog = ref(false);
 const dialogTitle = ref('添加镜头');
-const currentLens = ref<Partial<Lens>>({});
+const currentLens = ref<Partial<LensWithMounts>>({ mount_ids: [] });
 const lensForm = ref<any>(null);
 const loading = ref(false);
 
 // 生命周期钩子
 onMounted(() => {
   fetchLenses();
+  fetchBrands();
+  fetchMounts();
 });
+
+// 获取品牌列表
+const fetchBrands = async () => {
+  try {
+    const response = await Service.readBrandsBrandsGet(0, 100);
+    brands.value = response;
+  } catch (error) {
+    ElMessage.error('获取品牌列表失败');
+    console.error(error);
+  }
+};
+
+// 获取卡口列表
+const fetchMounts = async () => {
+  try {
+    const response = await Service.readMountsMountsGet(0, 100);
+    mounts.value = response;
+  } catch (error) {
+    ElMessage.error('获取卡口列表失败');
+    console.error(error);
+  }
+};
 
 // 数据获取
 const fetchLenses = async () => {
   try {
     loading.value = true;
-    const skip = (currentPage.value - 1) * pageSize.value;
-    // 移除多余的searchKeyword参数，只保留skip和pageSize两个参数
-      const response = await Service.readLensesLensesGet(skip, pageSize.value);
-    lenses.value = response;
-    total.value = lenses.value.length;
+    // 获取所有符合条件的数据用于计算总条数
+      const response = await Service.readLensesLensesGet(0, 1000);
+const allLenses = response as LensWithMounts[];
+      // 应用搜索过滤
+      const filteredLenses = searchKeyword.value
+        ? allLenses.filter(lens => 
+            (lens.model && lens.model.toLowerCase().includes(searchKeyword.value.toLowerCase())) ||
+            (lens.model_zh && lens.model_zh.toLowerCase().includes(searchKeyword.value.toLowerCase()))
+          )
+        : allLenses;
+      // 初始化镜头的mount_ids属性（假设后端已返回或需要手动关联）
+      allLenses.forEach(lens => {
+        lens.mount_ids = lens.mount_ids || [];
+      });
+      const skip = (currentPage.value - 1) * pageSize.value;
+       lenses.value = filteredLenses.slice(skip, skip + pageSize.value);
+        total.value = filteredLenses.length;
   } catch (error: unknown) {
     if (!(error instanceof Error)) {
       ElMessage.error('未知错误类型');
@@ -164,8 +240,16 @@ const handleSizeChange = (size: number) => {
 };
 
 // 编辑操作
-const handleEdit = (row: Lens) => {
+const handleEdit = async (row: Lens) => {
   currentLens.value = { ...row };
+  // 获取镜头关联的卡口
+  try {
+    const response = await Service.readLensMountsLensesLensIdMountsGet(row.id!);
+    currentLens.value.mount_ids = response.map((m: any) => m.mount_id);
+  } catch (error) {
+    ElMessage.error('获取镜头卡口关联失败');
+    console.error(error);
+  }
   dialogTitle.value = '编辑镜头';
   showAddDialog.value = true;
 };
@@ -194,14 +278,21 @@ const submitForm = async () => {
   try {
     await lensForm.value.validate();
     loading.value = true;
+    const lensData = { ...currentLens.value };
+    const mountIds = lensData.mount_ids || [];
+    delete lensData.mount_ids;
 
     if (currentLens.value.id) {
-      // 使用类型断言确保与API要求的Lens类型匹配（参照BrandListView实现）
-      await Service.updateLensLensesLensIdPut(currentLens.value.id!, currentLens.value as Lens);
+      // 更新镜头
+      await Service.updateLensLensesLensIdPut(currentLens.value.id!, lensData as Lens);
+      // 更新卡口关联
+      await Service.updateLensMountsLensesLensIdMountsPut(currentLens.value.id!, { mount_ids: mountIds });
       ElMessage.success('更新镜头成功');
     } else {
-      // 使用类型断言确保与API要求的Lens类型匹配（参照BrandListView实现）
-      await Service.createLensLensesPost(currentLens.value as Lens);
+      // 创建镜头
+      const newLens = await Service.createLensLensesPost(lensData as Lens);
+      // 创建卡口关联
+      await Service.createLensMountsLensesLensIdMountsPost(newLens.id!, { mount_ids: mountIds });
       ElMessage.success('添加镜头成功');
     }
 
