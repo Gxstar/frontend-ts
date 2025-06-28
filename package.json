@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
-    "update-api": "openapi-typescript-codegen --input http://127.0.0.1:8000/openapi.json --output src/api --client axios"
+    "update-api": "npx openapi-typescript-codegen --input http://127.0.0.1:8000/openapi.json --output src/api --client axios"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

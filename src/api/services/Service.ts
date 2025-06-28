@@ -15,17 +15,22 @@ import { request as __request } from '../core/request';
 export class Service {
     /**
      * 创建品牌
-     * 添加一个新的相机品牌到数据库
+     * 添加一个新的相机品牌到数据库，并可关联多个卡口
      * @param requestBody
+     * @param mountIds 关联的卡口ID列表
      * @returns Brand 创建成功的品牌信息
      * @throws ApiError
      */
     public static createBrandBrandsPost(
         requestBody: Brand,
+        mountIds?: (Array<number> | null),
     ): CancelablePromise<Brand> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/brands/',
+            query: {
+                'mount_ids': mountIds,
+            },
             body: requestBody,
             mediaType: 'application/json',
             errors: {
@@ -35,7 +40,7 @@ export class Service {
     }
     /**
      * 获取品牌列表
-     * 分页查询所有相机品牌信息
+     * 分页查询所有相机品牌信息，包含关联的卡口信息
      * @param skip
      * @param limit
      * @param keyword
@@ -62,7 +67,7 @@ export class Service {
     }
     /**
      * 获取品牌详情
-     * 根据ID查询特定相机品牌信息
+     * 根据ID查询特定相机品牌信息，包含关联的卡口信息
      * @param brandId
      * @returns Brand 品牌详细信息
      * @throws ApiError
@@ -83,21 +88,26 @@ export class Service {
     }
     /**
      * 更新品牌信息
-     * 根据ID更新相机品牌信息
+     * 根据ID更新相机品牌信息，并可更新关联的卡口
      * @param brandId
      * @param requestBody
+     * @param mountIds 关联的卡口ID列表，为null则不修改关联，为空列表则清除所有关联
      * @returns Brand 更新后的品牌信息
      * @throws ApiError
      */
     public static updateBrandBrandsBrandIdPut(
         brandId: number,
         requestBody: Brand,
+        mountIds?: (Array<number> | null),
     ): CancelablePromise<Brand> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/brands/{brand_id}',
             path: {
                 'brand_id': brandId,
+            },
+            query: {
+                'mount_ids': mountIds,
             },
             body: requestBody,
             mediaType: 'application/json',
@@ -108,7 +118,7 @@ export class Service {
     }
     /**
      * 删除品牌
-     * 根据ID删除相机品牌记录
+     * 根据ID删除相机品牌记录，并级联删除关联的卡口关系
      * @param brandId
      * @returns any 删除操作结果
      * @throws ApiError
@@ -406,17 +416,22 @@ export class Service {
     }
     /**
      * 创建镜头
-     * 添加一个新的镜头到数据库
+     * 添加一个新的镜头到数据库，并可关联多个卡口
      * @param requestBody
+     * @param mountIds 关联的卡口ID列表
      * @returns Lens 创建成功的镜头信息
      * @throws ApiError
      */
     public static createLensLensesPost(
         requestBody: Lens,
+        mountIds?: (Array<number> | null),
     ): CancelablePromise<Lens> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/lenses/',
+            query: {
+                'mount_ids': mountIds,
+            },
             body: requestBody,
             mediaType: 'application/json',
             errors: {
@@ -426,7 +441,7 @@ export class Service {
     }
     /**
      * 获取镜头列表
-     * 分页查询所有镜头信息
+     * 分页查询所有镜头信息，包含关联的卡口信息
      * @param skip
      * @param limit
      * @returns Lens 镜头列表
@@ -450,7 +465,7 @@ export class Service {
     }
     /**
      * 获取镜头详情
-     * 根据ID查询特定镜头信息
+     * 根据ID查询特定镜头信息，包含关联的卡口信息
      * @param lensId
      * @returns Lens 镜头详细信息
      * @throws ApiError
@@ -471,21 +486,26 @@ export class Service {
     }
     /**
      * 更新镜头信息
-     * 根据ID更新镜头信息
+     * 根据ID更新镜头信息，并可更新关联的卡口
      * @param lensId
      * @param requestBody
+     * @param mountIds 关联的卡口ID列表，为null则不修改关联，为空列表则清除所有关联
      * @returns Lens 更新后的镜头信息
      * @throws ApiError
      */
     public static updateLensLensesLensIdPut(
         lensId: number,
         requestBody: Lens,
+        mountIds?: (Array<number> | null),
     ): CancelablePromise<Lens> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/lenses/{lens_id}',
             path: {
                 'lens_id': lensId,
+            },
+            query: {
+                'mount_ids': mountIds,
             },
             body: requestBody,
             mediaType: 'application/json',
