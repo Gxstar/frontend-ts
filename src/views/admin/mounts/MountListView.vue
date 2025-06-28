@@ -53,6 +53,11 @@
         <el-form-item label="直径" prop="diameter">
           <el-input v-model.number="currentMount.diameter" type="number" />
         </el-form-item>
+        <el-form-item label="关联品牌" prop="brand_ids">
+          <el-select v-model="currentMount.brand_ids" multiple placeholder="请选择品牌">
+            <el-option v-for="brand in brands" :key="brand.id" :label="brand.name" :value="brand.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="currentMount.description" type="textarea" :rows="4" />
         </el-form-item>
@@ -70,30 +75,55 @@ import { ref, reactive, onMounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
 import { Service } from '@/api/services/Service';
+import type { Brand } from '@/api/models/Brand';
 import type { Mount } from '@/api/models/Mount';
+interface MountWithBrands {
+  id?: number;
+  name?: string;
+  release_year?: number | null;
+  flange_distance?: number | null;
+  diameter?: number | null;
+  description?: string | null;
+  brand_ids: number[];
+}
 import type { Body_create_mount_mounts__post } from '@/api/models/Body_create_mount_mounts__post';
 import type { Body_update_mount_mounts__mount_id__put } from '@/api/models/Body_update_mount_mounts__mount_id__put';
 
 // 状态管理
 const mounts = ref<Mount[]>([]);
+const brands = ref<Brand[]>([]);
+
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
 
 const showAddDialog = ref(false);
 const dialogTitle = ref('添加卡口');
-const currentMount = ref<Partial<Mount>>({});
+const currentMount = ref<MountWithBrands>({ brand_ids: [] });
 const mountForm = ref<any>(null);
 const loading = ref(false);
 
 // 表单验证规则
 const formRules = {
   name: [{ required: true, message: '请输入卡口名称', trigger: 'blur' }],
+  brand_ids: [{ required: true, type: 'array', min: 1, message: '请至少选择一个品牌', trigger: 'change' }],
+};
+
+// 获取品牌列表
+const fetchBrands = async () => {
+  try {
+    const response = await Service.readBrandsBrandsGet(0, 100);
+    brands.value = response;
+  } catch (error) {
+    ElMessage.error('获取品牌列表失败');
+    console.error(error);
+  }
 };
 
 // 生命周期钩子
 onMounted(() => {
   fetchMounts();
+  fetchBrands();
 });
 
 // API调用 - 获取卡口列表
@@ -130,9 +160,12 @@ const handleSizeChange = (size: number) => {
 
 // 编辑操作
 const handleEdit = (row: Mount) => {
-  currentMount.value = { ...row };
-  dialogTitle.value = '编辑卡口';
-  showAddDialog.value = true;
+   currentMount.value = { 
+     ...row,
+     brand_ids: []
+   };
+   dialogTitle.value = '编辑卡口';
+   showAddDialog.value = true;
 };
 
 // 删除操作
@@ -167,15 +200,17 @@ const submitForm = async () => {
     if (currentMount.value.id) {
       // 更新卡口
       const updateData: Body_update_mount_mounts__mount_id__put = {
-        mount_update: currentMount.value as Mount,
-      };
+  mount_update: currentMount.value as Mount,
+  brands: currentMount.value.brand_ids || []
+};
       await Service.updateMountMountsMountIdPut(currentMount.value.id!, updateData);
       ElMessage.success('更新卡口成功');
     } else {
       // 创建卡口
       const createData: Body_create_mount_mounts__post = {
-        mount: currentMount.value as Mount,
-      };
+  mount: currentMount.value as Mount,
+  brand_ids: currentMount.value.brand_ids || []
+};
       await Service.createMountMountsPost(createData);
       ElMessage.success('添加卡口成功');
     }
@@ -197,7 +232,8 @@ const submitForm = async () => {
 
 // 重置表单
 const resetForm = () => {
-  currentMount.value = {};
+  currentMount.value = { brand_ids: [] };
+
   mountForm.value?.resetFields();
 };
 </script>
