@@ -19,11 +19,15 @@
       </div>
 
       <el-table :data="cameras" stripe style="width: 100%">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="model" label="相机型号" />
-        <el-table-column prop="brand_id" label="品牌ID" />
-        <el-table-column prop="mount_id" label="卡口ID" />
-        <el-table-column prop="created_at" label="创建时间" />
+          <el-table-column prop="model" label="型号" />
+          <el-table-column label="品牌" width="120">
+            <template #default="{ row }">{{ brands.find(b => b.id === row.brand_id)?.name || '-' }}</template>
+          </el-table-column>
+          <el-table-column label="传感器尺寸" prop="sensor_size" />
+          <el-table-column label="有效像素" prop="megapixels" />
+          <el-table-column label="卡口" width="120">
+            <template #default="{ row }">{{ mounts.find(m => m.id === row.mount_id)?.name || '-' }}</template>
+          </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
             <el-button size="small" @click="handleEdit(row)">编辑</el-button>

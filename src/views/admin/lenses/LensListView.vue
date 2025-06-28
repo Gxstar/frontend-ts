@@ -26,15 +26,13 @@
           <template #default="{ row }">{{ brands.find(b => b.id === row.brand_id)?.name || '-' }}</template>
         </el-table-column>
         <el-table-column prop="focal_length" label="焦距" />
-        <el-table-column prop="aperture" label="光圈" />
-        <el-table-column prop="lens_type" label="镜头类型" />
-        <el-table-column prop="release_year" label="发布年份" width="120" />
-        <el-table-column label="卡口" width="180">
-          <template #default="{ row }">
-            {{ row.mount_ids && (row.mount_ids as number[]).map((id: number) => mounts.find(m => m.id === id)?.name).filter(Boolean).join(', ') || '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="200" align="center">
+      <el-table-column prop="aperture" label="光圈" />
+      <el-table-column label="卡口" width="180">
+        <template #default="{ row }">
+          {{ row.mount_ids && (row.mount_ids as number[]).map((id: number) => mounts.find(m => m.id === id)?.name).filter(Boolean).join(', ') || '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="200" align="center">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
             <el-button type="danger" size="small" @click="handleDelete(row.id)">删除</el-button>
@@ -240,16 +238,10 @@ const handleSizeChange = (size: number) => {
 };
 
 // 编辑操作
-const handleEdit = async (row: Lens) => {
+const handleEdit = (row: LensWithMounts) => {
   currentLens.value = { ...row };
-  // 获取镜头关联的卡口
-  try {
-    const response = await Service.readLensMountsLensesLensIdMountsGet(row.id!);
-    currentLens.value.mount_ids = response.map((m: any) => m.mount_id);
-  } catch (error) {
-    ElMessage.error('获取镜头卡口关联失败');
-    console.error(error);
-  }
+  // 直接使用镜头对象中的mount_ids属性
+  currentLens.value.mount_ids = currentLens.value.mount_ids || [];
   dialogTitle.value = '编辑镜头';
   showAddDialog.value = true;
 };
@@ -279,20 +271,14 @@ const submitForm = async () => {
     await lensForm.value.validate();
     loading.value = true;
     const lensData = { ...currentLens.value };
-    const mountIds = lensData.mount_ids || [];
-    delete lensData.mount_ids;
 
     if (currentLens.value.id) {
-      // 更新镜头
-      await Service.updateLensLensesLensIdPut(currentLens.value.id!, lensData as Lens);
-      // 更新卡口关联
-      await Service.updateLensMountsLensesLensIdMountsPut(currentLens.value.id!, { mount_ids: mountIds });
+      // 更新镜头（包含mount_ids）
+      await Service.updateLensLensesLensIdPut(currentLens.value.id!, lensData as LensWithMounts);
       ElMessage.success('更新镜头成功');
     } else {
-      // 创建镜头
-      const newLens = await Service.createLensLensesPost(lensData as Lens);
-      // 创建卡口关联
-      await Service.createLensMountsLensesLensIdMountsPost(newLens.id!, { mount_ids: mountIds });
+      // 创建镜头（包含mount_ids）
+      await Service.createLensLensesPost(lensData as LensWithMounts);
       ElMessage.success('添加镜头成功');
     }
 
